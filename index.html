@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SUPORTE TÉCNICO - ENGENHARIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+      /* Custom scrollbar for better aesthetics */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      /* General scrollbar styling for Firefox */
+      html {
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+    </style>
+    <!-- Babel for in-browser JSX/TS transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "@google/genai": "https://esm.sh/@google/genai",
+        "react": "https://esm.sh/react@18.3.1"
+      }
+    }
+    </script>
+</head>
+  <body class="bg-gray-100">
+    <div id="root"></div>
+    <script type="text/babel" data-type="module">
+// BUNDLED APPLICATION CODE - DO NOT EDIT MANUALLY
+
+// External Library Imports
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import { GoogleGenAI } from "@google/genai";
+
+// ========= From: types.ts =========
+const EquipmentType = {
+  ESCALATOR: 'Escada Rolante',
+  ELEVATOR: 'Elevador',
+  PLATFORM: 'Plataforma de Acessibilidade',
+  TRAVELATOR: 'Esteira Rolante',
+  NONE: ''
+};
+
+const UserRole = {
+  ADMIN: 'Administrador',
+  COMMON: 'Comum',
+};
+
+
+// ========= From: components/icons/UserCircleIcon.tsx =========
+const UserCircleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+
+// ========= From: components/icons/LogoutIcon.tsx =========
+const LogoutIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+);
+
+
+// ========= From: components/icons/UserGroupIcon.tsx =========
+const UserGroupIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0110 14.24V17h2.93zM9 11.5a4.5 4.5 0 00-4.5 4.5V17h9v-1.5A4.5 4.5 0 009 11.5z" />
+  </svg>
+);
+
+
+// ========= From: components/icons/SparklesIcon.tsx =========
+const SparklesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm6 2a1 1 0 011 1v1h1a1 1 0 010 2h-1v1a1 1 0 01-2 0V8h-1a1 1 0 010-2h1V5a1 1 0 011-1zm-3 8a1 1 0 011 1v1h1a1 1 0 010 2h-1v1a1 1 0 01-2 0v-1h-1a1 1 0 010-2h1v-1a1 1 0 011-1z" clipRule="evenodd" />
+  </svg>
+);
+
+
+// ========= From: components/icons/SpinnerIcon.tsx =========
+const SpinnerIcon = () => (
+  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+);
+
+
+// ========= From: components/icons/PencilIcon.tsx =========
+const PencilIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+    <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+  </svg>
+);
+
+
+// ========= From: components/icons/DownloadIcon.tsx =========
+const DownloadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+  </svg>
+);
+
+
+// ========= From: components/icons/TrashIcon.tsx =========
+const TrashIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 group-hover:text-red-600 transition-colors" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+  </svg>
+);
+
+
+// ========= From: services/geminiService.ts =========
+const API_KEY = process.env.API_KEY;
+
+if (!API_KEY) {
+  // In a real app, you might want a more user-friendly error message.
+  // For this context, we assume the key is provided by the execution environment.
+  console.warn("API_KEY environment variable not set. AI features will fail.");
+}
+
+// Initialize AI client only if API_KEY exists
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+
+async function getAiSuggestion(
+  problem,
+  equipmentType,
+  brand,
+  controlType
+) {
+  if (!ai) {
+    throw new Error("Gemini AI client is not initialized. Please check your API_KEY.");
+  }
+  
+  const model = "gemini-2.5-flash";
+  
+  const prompt = `
+    Você é um engenheiro especialista em suporte técnico para equipamentos de transporte vertical (elevadores, escadas rolantes, etc.).
+    Com base nas informações a seguir, forneça uma sugestão de diagnóstico e possíveis etapas de solução.
+    Seja claro, conciso e técnico. Organize a resposta em pontos ou um passo-a-passo.
+
+    - Tipo de Equipamento: ${equipmentType || 'Não informado'}
+    - Marca: ${brand || 'Não informada'}
+    - Tipo de Comando: ${controlType || 'Não informado'}
+    - Descrição do Problema: ${problem}
+
+    Sugestão de Diagnóstico e Solução:
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+    });
+    
+    return response.text.trim();
+  } catch (error) {
+    console.error("Gemini API call failed:", error);
+    throw new Error("Failed to get suggestion from AI service.");
+  }
+}
+
+
+// ========= From: components/InputField.tsx =========
+const InputField = ({ label, name, value, onChange, type = 'text', required = false }) => {
+  return (
+    <div>
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type={type}
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150"
+      />
+    </div>
+  );
+};
+
+
+// ========= From: components/SelectField.tsx =========
+const SelectField = ({ label, name, value, onChange, options, required = false }) => {
+  return (
+    <div>
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <select
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm transition duration-150"
+      >
+        <option value="">Selecione um tipo</option>
+        {options.filter(opt => opt !== '').map(option => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+
+// ========= From: components/TextAreaField.tsx =========
+const TextAreaField = ({ label, name, value, onChange, required = false, rows = 4 }) => {
+  return (
+    <div className="mt-4">
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <textarea
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        rows={rows}
+        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150"
+      />
+    </div>
+  );
+};
+
+
+// ========= From: components/RadioGroupField.tsx =========
+const RadioGroupField = ({ label, name, value, onChange, options, required = false }) => {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="flex items-center space-x-6">
+        {options.map(option => (
+          <div key={option} className="flex items-center">
+            <input
+              id={`${name}-${option}`}
+              name={name}
+              type="radio"
+              checked={value === option}
+              onChange={() => onChange(name, option)}
+              required={required}
+              className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+            />
+            <label htmlFor={`${name}-${option}`} className="ml-2 block text-sm text-gray-900">
+              {option}
+            </label>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+// ========= From: components/ImageUploadField.tsx =========
+const ImageUploadField = ({ label, name, onFileChange, initialFiles = [], maxFiles = Infinity }) => {
+  const [previews, setPreviews] = useState([]);
+  const [fileNames, setFileNames] = useState([]);
+
+  useEffect(() => {
+    const newPreviews = initialFiles.map(file => URL.createObjectURL(file));
+    setPreviews(newPreviews);
+    setFileNames(initialFiles.map(f => f.name));
+
+    return () => {
+      newPreviews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [initialFiles]);
+
+
+  const handleFileSelect = useCallback((event) => {
+    let files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      if (files.length > maxFiles) {
+        alert(`Você pode selecionar no máximo ${maxFiles} arquivos. Somente os primeiros ${maxFiles} serão carregados.`);
+        files = files.slice(0, maxFiles);
+      }
+      onFileChange(name, files);
+    }
+  }, [name, onFileChange, maxFiles]);
+  
+  const fileCount = initialFiles.length;
+  const limitReached = fileCount >= maxFiles;
+
+
+  return (
+    <div className="mt-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label} {isFinite(maxFiles) && `(até ${maxFiles} arquivos)`}</label>
+      <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md transition-colors ${limitReached ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
+        <div className="space-y-1 text-center">
+          <svg className={`mx-auto h-12 w-12 transition-colors ${limitReached ? 'text-gray-300' : 'text-gray-400'}`} stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <div className="flex text-sm text-gray-600 justify-center">
+            <label htmlFor={name} className={`relative rounded-md font-medium focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 ${limitReached ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer bg-white text-blue-600 hover:text-blue-500'}`}>
+              <span>{limitReached ? 'Limite de arquivos atingido' : 'Carregar arquivos'}</span>
+              <input id={name} name={name} type="file" className="sr-only" multiple accept="image/*" onChange={handleFileSelect} disabled={limitReached} />
+            </label>
+            {!limitReached && <p className="pl-1">ou arraste e solte</p>}
+          </div>
+          <p className="text-xs text-gray-500">PNG, JPG, GIF até 10MB</p>
+        </div>
+      </div>
+      {previews.length > 0 && (
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {previews.map((src, index) => (
+            <div key={src} className="relative group">
+              <img src={src} alt={`Preview ${index + 1}`} className="h-28 w-full object-cover rounded-md shadow-lg" />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-opacity duration-300">
+                 <p className="text-white text-xs text-center opacity-0 group-hover:opacity-100 p-1 bg-black bg-opacity-70 rounded">{fileNames[index]}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+// ========= From: components/Footer.tsx =========
+const Footer = () => {
+  return (
+    <footer className="bg-white mt-8">
+      <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <p className="text-center text-sm text-gray-500">
+          &copy; {new Date().getFullYear()} Verticalparts Engenharia. Todos os direitos reservados.
+        </p>
+      </div>
+    </footer>
+  );
+};
+
+
+// ========= From: components/Header.tsx =========
+const Header = ({ currentUser, onLogout }) => {
+  return (
+    <header className="bg-white shadow-md">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative flex items-center justify-between h-20">
+          <div className="flex items-center">
+            <img 
+              src="https://verticalparts.com.br/wp-content/uploads/2023/10/LOGO3-768x159.png" 
+              alt="Verticalparts Logo" 
+              className="h-10" 
+            />
+          </div>
+          
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+             <h1 className="text-2xl font-bold text-gray-800 whitespace-nowrap uppercase">
+              Suporte Técnico - Engenharia
+            </h1>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <UserCircleIcon />
+                <span className="font-medium text-gray-700">{currentUser.name}</span>
+              </div>
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                aria-label="Sair da conta"
+              >
+                <LogoutIcon />
+                <span className="ml-2">Sair</span>
+              </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+
+// ========= From: components/LoginScreen.tsx =========
+const LoginScreen = ({ onLogin }) => {
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    if (!name || !password) {
+      setError('Por favor, preencha o nome de usuário e a senha.');
+      return;
+    }
+    const success = onLogin(name, password);
+    if (!success) {
+      setError('Nome de usuário ou senha inválidos.');
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg animate-fade-in">
+        <div className="flex justify-center">
+          <img 
+            src="https://verticalparts.com.br/wp-content/uploads/2023/10/LOGO3-768x159.png" 
+            alt="Verticalparts Logo" 
+            className="h-20"
+          />
+        </div>
+        <h2 className="text-2xl font-bold text-center text-gray-800">
+          Acessar Sistema de Suporte
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              Nome de Usuário
+            </label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block w-full px-3 py-2.5 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+              placeholder="Ex: Admin User"
+            />
+          </div>
+          <div>
+            <label htmlFor="password"className="block text-sm font-medium text-gray-700 mb-1">
+              Senha
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2.5 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+              placeholder="********"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-black bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+          >
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+
+// ========= From: components/AdminPanel.tsx =========
+const AdminPanel = ({ users, onAddUser, onDeleteUser }) => {
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserRole, setNewUserRole] = useState(UserRole.COMMON);
+  const [newUserPassword, setNewUserPassword] = useState('');
+
+  const handleAddSubmit = (e) => {
+    e.preventDefault();
+    if (!newUserName.trim() || !newUserPassword.trim()) {
+      alert('O nome do usuário e a senha não podem estar em branco.');
+      return;
+    }
+    onAddUser(newUserName, newUserRole, newUserPassword);
+    setNewUserName('');
+    setNewUserRole(UserRole.COMMON);
+    setNewUserPassword('');
+  };
+
+  return (
+    <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg max-w-4xl mx-auto space-y-8">
+      {/* Add User Form */}
+      <fieldset>
+        <legend className="text-2xl font-bold text-gray-900 mb-6">Criar Novo Usuário</legend>
+        <form onSubmit={handleAddSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="newUserName" className="block text-sm font-medium text-gray-700 mb-1">
+                Nome do Usuário
+              </label>
+              <input
+                id="newUserName"
+                type="text"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+                placeholder="Ex: João Silva"
+                required
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+             <div>
+              <label htmlFor="newUserPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                Senha
+              </label>
+              <input
+                id="newUserPassword"
+                type="password"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+                placeholder="********"
+                required
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex items-end space-x-4">
+             <div className="flex-grow">
+                <label htmlFor="newUserRole" className="block text-sm font-medium text-gray-700 mb-1">
+                  Função
+                </label>
+                <select
+                  id="newUserRole"
+                  value={newUserRole}
+                  onChange={(e) => setNewUserRole(e.target.value)}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm"
+                >
+                  <option value={UserRole.COMMON}>Comum</option>
+                  <option value={UserRole.ADMIN}>Administrador</option>
+                </select>
+            </div>
+            <button
+                type="submit"
+                className="px-6 py-2 bg-yellow-400 text-black font-semibold rounded-lg shadow-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 transition duration-300 h-10"
+              >
+                Adicionar Usuário
+            </button>
+          </div>
+        </form>
+      </fieldset>
+
+      {/* User List */}
+      <fieldset>
+        <legend className="text-2xl font-bold text-gray-900 mb-6">Usuários Existentes</legend>
+        <div className="space-y-3">
+          {users.map(user => (
+            <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div>
+                <p className="font-semibold text-gray-800">{user.name}</p>
+                <p className="text-sm text-gray-500">{user.role}</p>
+              </div>
+              <button
+                onClick={() => {
+                  if (window.confirm(`Tem certeza que deseja excluir o usuário "${user.name}"?`)) {
+                    onDeleteUser(user.id);
+                  }
+                }}
+                className="p-2 rounded-full hover:bg-red-100 group transition-colors"
+                aria-label={`Excluir ${user.name}`}
+              >
+                <TrashIcon />
+              </button>
+            </div>
+          ))}
+        </div>
+      </fieldset>
+    </div>
+  );
+};
+
+
+// ========= From: components/RequestForm.tsx =========
+const initialFormData = {
+  requesterName: '',
+  technicianName: '',
+  technicianPhone: '',
+  client: '',
+  clientPhone: '',
+  address: '',
+  complement: '',
+  neighborhood: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  serialNumber: '',
+  equipmentType: EquipmentType.NONE,
+  equipmentBrand: '',
+  controlType: '',
+  elevatorStops: '',
+  responsibleVerticalparts: '',
+  problemDescription: '',
+  problemPhotos: [],
+  solutionSuggestion: '',
+  solutionPhotos: [],
+  isResolved: null,
+  needsOnSite: null,
+};
+
+const RequestForm = ({ onSave, initialData, onCancel }) => {
+  const [formData, setFormData] = useState(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData(initialFormData);
+    }
+  }, [initialData]);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
+  
+  const handleRadioChange = useCallback((name, value) => {
+    setFormData(prev => ({...prev, [name]: value}));
+  }, []);
+
+  const handleFileChange = useCallback((name, files) => {
+    setFormData(prev => ({...prev, [name]: files}));
+  }, []);
+
+  const handleGetAiSuggestion = async () => {
+    if (!formData.problemDescription) {
+      setAiError("Por favor, descreva o problema primeiro.");
+      return;
+    }
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const suggestion = await getAiSuggestion(
+        formData.problemDescription,
+        formData.equipmentType,
+        formData.equipmentBrand,
+        formData.controlType
+      );
+      setFormData(prev => ({ ...prev, solutionSuggestion: suggestion }));
+    } catch (error) {
+      console.error("Error getting AI suggestion:", error);
+      setAiError("Falha ao obter sugestão da IA. Verifique sua chave de API e tente novamente.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate API call for user feedback
+    setTimeout(() => {
+       onSave(formData);
+       // Reset submitting state inside onSave or after a timeout
+    }, 500);
+  };
+  
+  const handleClear = () => {
+      setFormData(initialFormData);
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg max-w-4xl mx-auto space-y-8"
+    >
+      {/* Section 1: Dados da Obra e Técnico */}
+      <fieldset className="border-b border-gray-200 pb-8">
+        <legend className="text-2xl font-bold text-gray-900 mb-6">Informações Gerais</legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <InputField label="Nome de quem indicou ou solicitou" name="requesterName" value={formData.requesterName} onChange={handleChange} required />
+          <InputField label="Responsável pelo atendimento (Verticalparts)" name="responsibleVerticalparts" value={formData.responsibleVerticalparts} onChange={handleChange} required />
+          <InputField label="Nome do técnico no local" name="technicianName" value={formData.technicianName} onChange={handleChange} required />
+          <InputField label="Nº Celular do técnico" name="technicianPhone" type="tel" value={formData.technicianPhone} onChange={handleChange} required />
+        </div>
+      </fieldset>
+      
+      {/* Section 2: Dados do Cliente */}
+      <fieldset className="border-b border-gray-200 pb-8">
+        <legend className="text-2xl font-bold text-gray-900 mb-6">Dados do Cliente</legend>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField label="Cliente" name="client" value={formData.client} onChange={handleChange} required />
+            <InputField label="Celular do Cliente" name="clientPhone" type="tel" value={formData.clientPhone} onChange={handleChange} />
+          </div>
+          <InputField label="Endereço" name="address" value={formData.address} onChange={handleChange} required />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField label="Complemento" name="complement" value={formData.complement} onChange={handleChange} />
+            <InputField label="Bairro" name="neighborhood" value={formData.neighborhood} onChange={handleChange} required />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <InputField label="Cidade" name="city" value={formData.city} onChange={handleChange} required />
+            <InputField label="UF" name="state" value={formData.state} onChange={handleChange} required />
+            <InputField label="CEP" name="zipCode" value={formData.zipCode} onChange={handleChange} required />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* Section 3: Dados do Equipamento */}
+      <fieldset className="border-b border-gray-200 pb-8">
+        <legend className="text-2xl font-bold text-gray-900 mb-6">Dados do Equipamento</legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <InputField label="Nº de Série" name="serialNumber" value={formData.serialNumber} onChange={handleChange} required />
+          <SelectField label="Tipo de equipamento" name="equipmentType" value={formData.equipmentType} onChange={handleChange} options={Object.values(EquipmentType)} required />
+          <InputField label="Marca do equipamento" name="equipmentBrand" value={formData.equipmentBrand} onChange={handleChange} required />
+          <InputField label="Tipo de comando" name="controlType" value={formData.controlType} onChange={handleChange} required />
+          {formData.equipmentType === EquipmentType.ELEVATOR && (
+            <InputField label="Nº de Paradas" name="elevatorStops" type="number" value={formData.elevatorStops} onChange={handleChange} />
+          )}
+        </div>
+      </fieldset>
+      
+      {/* Section 4: Problema */}
+      <fieldset className="border-b border-gray-200 pb-8">
+         <legend className="text-2xl font-bold text-gray-900 mb-6">Descrição do Problema</legend>
+         <TextAreaField label="Descrição do problema informado pelo cliente" name="problemDescription" value={formData.problemDescription} onChange={handleChange} required />
+         <ImageUploadField label="Fotos do problema" name="problemPhotos" onFileChange={handleFileChange} initialFiles={formData.problemPhotos} maxFiles={4}/>
+      </fieldset>
+
+       {/* Section 5: Solução */}
+      <fieldset>
+         <legend className="text-2xl font-bold text-gray-900 mb-6">Solução / Sugestão</legend>
+         <div className="relative">
+            <TextAreaField label="Solução / Sugestão VerticalParts" name="solutionSuggestion" value={formData.solutionSuggestion} onChange={handleChange} />
+            <button type="button" onClick={handleGetAiSuggestion} disabled={aiLoading} className="absolute top-0 right-0 mt-2 mr-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed">
+              {aiLoading ? <SpinnerIcon /> : <SparklesIcon />}
+              <span className="ml-2">Obter Sugestão da IA</span>
+            </button>
+         </div>
+         {aiError && <p className="text-red-500 text-sm mt-2">{aiError}</p>}
+         <ImageUploadField label="Fotos da solução" name="solutionPhotos" onFileChange={handleFileChange} initialFiles={formData.solutionPhotos} maxFiles={4}/>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <RadioGroupField label="Resolvido?" name="isResolved" value={formData.isResolved} onChange={handleRadioChange} options={['Sim', 'Não']} />
+            <RadioGroupField label="Necessário atendimento presencial?" name="needsOnSite" value={formData.needsOnSite} onChange={handleRadioChange} options={['Sim', 'Não']} />
+         </div>
+      </fieldset>
+
+      {/* Action Buttons */}
+      <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+         {initialData ? (
+            <button type="button" onClick={onCancel} className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 transition duration-300">
+                Cancelar
+            </button>
+         ) : (
+            <button type="button" onClick={handleClear} className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 transition duration-300">
+                Limpar
+            </button>
+         )}
+         <button type="submit" disabled={isSubmitting} className="px-6 py-3 bg-yellow-400 text-black font-semibold rounded-lg shadow-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 disabled:bg-yellow-200 disabled:cursor-wait transition duration-300">
+            {isSubmitting ? 'Salvando...' : (initialData ? 'Salvar Alterações' : 'Enviar Relatório')}
+         </button>
+      </div>
+    </form>
+  );
+}
+
+
+// ========= From: components/RequestList.tsx =========
+// A variável global XLSX vem do script CDN e é acessada diretamente.
+const getStatusChip = (status) => {
+    if (status === 'Sim') {
+        return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Resolvido</span>;
+    }
+    if (status === 'Não') {
+        return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Não Resolvido</span>;
+    }
+    return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Em Aberto</span>;
+}
+
+const DetailItem = ({label, value}) => (
+  <div>
+    <p className="text-sm font-medium text-gray-500">{label}</p>
+    <p className="text-sm text-gray-800 font-semibold">{value || '-'}</p>
+  </div>
+);
+
+
+const RequestCard = ({ request, onEdit, onDelete }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const problemPhotoUrls = useMemo(() => 
+        request.problemPhotos.map(file => URL.createObjectURL(file)), 
+        [request.problemPhotos]
+    );
+    const solutionPhotoUrls = useMemo(() => 
+        request.solutionPhotos.map(file => URL.createObjectURL(file)), 
+        [request.solutionPhotos]
+    );
+
+    useEffect(() => {
+        return () => {
+            problemPhotoUrls.forEach(url => URL.revokeObjectURL(url));
+            solutionPhotoUrls.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [problemPhotoUrls, solutionPhotoUrls]);
+
+    const renderPhotoPreviews = (urls, files) => {
+        if (!urls || urls.length === 0) {
+            return <p className="text-sm text-gray-500 italic">Nenhuma foto enviada.</p>;
+        }
+        return (
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {urls.map((url, index) => (
+                    <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="relative group">
+                        <img 
+                            src={url} 
+                            alt={files[index].name} 
+                            className="h-24 w-full object-cover rounded-md shadow"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-opacity duration-300">
+                           <p className="text-white text-xs text-center opacity-0 group-hover:opacity-100 p-1 bg-black bg-opacity-70 rounded">{files[index].name}</p>
+                        </div>
+                    </a>
+                ))}
+            </div>
+        );
+    };
+    
+    const handleDelete = (e) => {
+        e.stopPropagation(); // Evita que o card expanda/recolha ao clicar no botão
+        if (window.confirm('Tem certeza de que deseja excluir esta solicitação? Esta ação não pode ser desfeita.')) {
+            onDelete(request.id);
+        }
+    };
+
+    return (
+        <div 
+            className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300"
+        >
+            <div 
+                onClick={() => setIsExpanded(!isExpanded)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsExpanded(!isExpanded)}
+                aria-expanded={isExpanded}
+                className="cursor-pointer"
+            >
+                {/* Summary View */}
+                <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-gray-800">{request.client || 'Cliente não informado'}</h3>
+                    {getStatusChip(request.isResolved)}
+                </div>
+                <p className="text-sm text-gray-600 mb-1"><strong>Endereço:</strong> {request.address}, {request.city}</p>
+                <p className="text-sm text-gray-600"><strong>Equipamento:</strong> {request.equipmentType} ({request.equipmentBrand})</p>
+                <p className="text-sm text-gray-600 italic mt-2">"{request.problemDescription.substring(0, 100)}{request.problemDescription.length > 100 ? '...' : ''}"</p>
+            </div>
+
+
+            {/* Expanded View */}
+            {isExpanded && (
+                <div className="mt-6 pt-4 border-t border-gray-200 space-y-4 animate-fade-in">
+                    <h4 className="text-base font-bold text-gray-800">Detalhes da Solicitação</h4>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-700 mb-2">Informações Gerais</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                          <DetailItem label="Solicitante" value={request.requesterName} />
+                          <DetailItem label="Responsável Verticalparts" value={request.responsibleVerticalparts} />
+                          <DetailItem label="Técnico no Local" value={request.technicianName} />
+                          <DetailItem label="Celular do Técnico" value={request.technicianPhone} />
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-700 mb-2">Dados do Cliente</h5>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                          <DetailItem label="Cliente" value={request.client} />
+                          <DetailItem label="Celular" value={request.clientPhone} />
+                       </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-700 mb-2">Endereço Completo</h5>
+                      <p className="text-sm text-gray-600">
+                          {request.address}{request.complement ? `, ${request.complement}` : ''}, {request.neighborhood}, {request.city} - {request.state}, CEP: {request.zipCode}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-700 mb-2">Detalhes do Equipamento</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                          <DetailItem label="Nº de Série" value={request.serialNumber} />
+                          <DetailItem label="Tipo" value={request.equipmentType} />
+                          <DetailItem label="Marca" value={request.equipmentBrand} />
+                          <DetailItem label="Comando" value={request.controlType} />
+                          {request.equipmentType === EquipmentType.ELEVATOR && <DetailItem label="Nº de Paradas" value={request.elevatorStops} />}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-700 mb-2">Problema</h5>
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{request.problemDescription}</p>
+                      {renderPhotoPreviews(problemPhotoUrls, request.problemPhotos)}
+                    </div>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-700 mb-2">Solução / Sugestão</h5>
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{request.solutionSuggestion || 'Nenhuma sugestão fornecida.'}</p>
+                      {renderPhotoPreviews(solutionPhotoUrls, request.solutionPhotos)}
+                    </div>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-700 mb-2">Status Final</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                          <DetailItem label="Atendimento Presencial" value={request.needsOnSite} />
+                          <DetailItem label="Resolvido" value={request.isResolved} />
+                      </div>
+                    </div>
+                </div>
+            )}
+            
+            <div className="mt-4 text-xs text-gray-400 text-right flex justify-between items-center">
+                <span>Técnico: {request.technicianName}</span>
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onEdit(request); }} 
+                    className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+                    aria-label="Editar Solicitação"
+                  >
+                    <PencilIcon />
+                  </button>
+                  <button 
+                    onClick={handleDelete}
+                    className="p-2 rounded-full hover:bg-red-100 group transition-colors"
+                    aria-label="Excluir Solicitação"
+                  >
+                    <TrashIcon />
+                  </button>
+                  <span 
+                    onClick={() => setIsExpanded(!isExpanded)} 
+                    className="font-semibold text-blue-600 cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsExpanded(!isExpanded)}
+                  >
+                    {isExpanded ? 'Ver menos' : 'Ver mais...'}
+                  </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const RequestList = ({ requests, title, onEdit, onDelete }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const showSearchBar = useMemo(() => 
+    title === 'Solicitações Resolvidas' || title === 'Solicitações Não Resolvidas',
+    [title]
+  );
+
+  const filteredRequests = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return requests;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return requests.filter(req =>
+      req.client.toLowerCase().includes(lowercasedFilter) ||
+      (req.solutionSuggestion && req.solutionSuggestion.toLowerCase().includes(lowercasedFilter))
+    );
+  }, [requests, searchTerm]);
+
+  const handleDownloadExcel = () => {
+    if (filteredRequests.length === 0) {
+        alert("Não há dados para exportar.");
+        return;
+    }
+
+    // Headers para a planilha em uma ordem mais lógica
+    const headers = [
+        'Status', 'Cliente', 'Celular Cliente', 'Endereço Completo', 'Equipamento', 'Marca', 'Nº de Série',
+        'Descrição do Problema', 'Sugestão de Solução', 'Técnico no Local', 'Celular Técnico',
+        'Responsável Verticalparts', 'Solicitante', 'Atendimento Presencial?', 'ID da Solicitação'
+    ];
+    
+    // Dados formatados para a planilha
+    const sheetData = [
+      [`Relatório de Solicitações: ${title}`],
+      [`Gerado em: ${new Date().toLocaleString('pt-BR')}`],
+      [], // Linha em branco para espaçamento
+      headers,
+      ...filteredRequests.map(req => [
+        req.isResolved === null ? 'Em Aberto' : req.isResolved,
+        req.client || '',
+        req.clientPhone || '',
+        `${req.address}, ${req.neighborhood}, ${req.city} - ${req.state}, CEP: ${req.zipCode}`,
+        req.equipmentType || '',
+        req.equipmentBrand || '',
+        req.serialNumber || '',
+        req.problemDescription || '',
+        req.solutionSuggestion || '',
+        req.technicianName || '',
+        req.technicianPhone || '',
+        req.responsibleVerticalparts || '',
+        req.requesterName || '',
+        req.needsOnSite || 'Não informado',
+        req.id || '',
+      ])
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+
+    // Mesclar as células do título e da data
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } });
+    worksheet['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } });
+
+    // Congelar o painel de cabeçalho (que está na linha 4, índice 3)
+    worksheet['!view'] = { state: 'frozen', ySplit: 4 };
+
+    // Definir larguras de coluna para melhor visualização
+    const colWidths = [
+        { wch: 15 }, // Status
+        { wch: 30 }, // Cliente
+        { wch: 15 }, // Celular Cliente
+        { wch: 50 }, // Endereço
+        { wch: 25 }, // Equipamento
+        { wch: 20 }, // Marca
+        { wch: 20 }, // Nº Série
+        { wch: 60 }, // Problema
+        { wch: 60 }, // Solução
+        { wch: 25 }, // Técnico
+        { wch: 15 }, // Celular Técnico
+        { wch: 25 }, // Responsável VP
+        { wch: 25 }, // Solicitante
+        { wch: 20 }, // Atendimento Presencial
+        { wch: 15 }, // ID
+    ];
+    worksheet['!cols'] = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Solicitações");
+
+    // Gerar nome do arquivo com data
+    const fileName = `Relatorio_${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
+  return (
+    <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        {requests.length > 0 && (
+          <button
+            onClick={handleDownloadExcel}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300"
+            aria-label="Baixar dados como planilha do Excel"
+          >
+            <DownloadIcon />
+            Baixar Excel
+          </button>
+        )}
+      </div>
+        
+      {showSearchBar && (
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Pesquisar por cliente ou solução..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            aria-label="Filtrar solicitações"
+          />
+        </div>
+      )}
+
+      {filteredRequests.length > 0 ? (
+        <div className="space-y-4">
+          {filteredRequests.map(req => <RequestCard key={req.id} request={req} onEdit={onEdit} onDelete={onDelete} />)}
+        </div>
+      ) : (
+        <p className="text-center text-gray-500 py-8">
+          {searchTerm ? 'Nenhuma solicitação corresponde à sua pesquisa.' : 'Nenhuma solicitação encontrada nesta categoria.'}
+        </p>
+      )}
+    </div>
+  );
+};
+
+
+// ========= From: components/SidePanel.tsx =========
+const SidePanel = ({ requests, setView, currentView, currentUser }) => {
+  const openRequests = requests.filter(r => r.isResolved === null).length;
+  const resolvedRequests = requests.filter(r => r.isResolved === 'Sim').length;
+  const unresolvedRequests = requests.filter(r => r.isResolved === 'Não').length;
+
+  const getButtonClass = (view) => {
+    return `w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 flex justify-between items-center ${
+      currentView === view
+        ? 'bg-yellow-400 text-black font-semibold'
+        : 'hover:bg-gray-700 text-gray-300'
+    }`;
+  };
+
+  return (
+    <aside className="w-64 bg-gray-900 shadow-lg p-4 flex-shrink-0 rounded-2xl">
+      <nav className="space-y-2">
+        <button
+          onClick={() => setView('form')}
+          className="w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 bg-yellow-400 text-black hover:bg-yellow-500 font-semibold text-center"
+        >
+          + Nova Solicitação
+        </button>
+        
+        {/* Admin-only views */}
+        {currentUser.role === UserRole.ADMIN && (
+            <div className="pt-4 mt-4 border-t border-gray-700">
+                <h3 className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Visualizar</h3>
+                <button onClick={() => setView('aberto')} className={getButtonClass('aberto')}>
+                    <span>Em Aberto</span>
+                    <span className="bg-yellow-400 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded-full">{openRequests}</span>
+                </button>
+                <button onClick={() => setView('resolvido')} className={getButtonClass('resolvido')}>
+                    <span>Resolvidas</span>
+                    <span className="bg-green-400 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">{resolvedRequests}</span>
+                </button>
+                <button onClick={() => setView('nao_resolvido')} className={getButtonClass('nao_resolvido')}>
+                    <span>Não Resolvidas</span>
+                    <span className="bg-red-400 text-red-800 text-xs font-semibold px-2 py-0.5 rounded-full">{unresolvedRequests}</span>
+                </button>
+            </div>
+        )}
+        
+        {/* Admin-only panel */}
+        {currentUser.role === UserRole.ADMIN && (
+          <div className="pt-4 mt-4 border-t border-gray-700">
+            <h3 className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Gerenciamento</h3>
+             <button onClick={() => setView('admin')} className={getButtonClass('admin')}>
+                <span className="flex items-center">
+                  <UserGroupIcon />
+                  <span className="ml-2">Usuários</span>
+                </span>
+             </button>
+          </div>
+        )}
+      </nav>
+    </aside>
+  );
+};
+
+
+// ========= From: App.tsx =========
+// Hardcoded initial users for demonstration
+const initialUsers = [
+  { id: 1, name: 'admin', role: UserRole.ADMIN, password: '123' },
+  { id: 2, name: 'Common User', role: UserRole.COMMON, password: 'user' },
+];
+
+function App() {
+  const [requests, setRequests] = useState([]);
+  const [users, setUsers] = useState(initialUsers);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [view, setView] = useState('form');
+  const [editingRequest, setEditingRequest] = useState(null);
+
+  const handleLogin = (name, password) => {
+    const user = users.find(u => u.name.toLowerCase() === name.toLowerCase());
+    if (user && user.password === password) {
+      setCurrentUser(user);
+      setView('form');
+      setEditingRequest(null);
+      return true;
+    }
+    return false;
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+  };
+
+  const handleAddUser = (name, role, password) => {
+    if (users.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+        alert(`O usuário com o nome "${name}" já existe.`);
+        return;
+    }
+    const newUser = { id: Date.now(), name, role, password };
+    setUsers(prev => [...prev, newUser]);
+    alert(`Usuário "${name}" criado com sucesso!`);
+  };
+
+  const handleDeleteUser = (userId) => {
+    // Prevent deleting the currently logged-in user
+    if (userId === currentUser?.id) {
+      alert("Você não pode deletar o usuário que está logado.");
+      return;
+    }
+    // Prevent deleting the last admin
+    const userToDelete = users.find(u => u.id === userId);
+    const adminCount = users.filter(u => u.role === UserRole.ADMIN).length;
+    if (userToDelete?.role === UserRole.ADMIN && adminCount <= 1) {
+      alert("Não é possível deletar o último administrador.");
+      return;
+    }
+
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    alert("Usuário excluído com sucesso!");
+  };
+
+  const handleSaveRequest = (data) => {
+    // If editingRequest exists, it's an update.
+    if (editingRequest) {
+      setRequests(prev => prev.map(r => r.id === editingRequest.id ? { ...data, id: editingRequest.id } : r));
+      alert("Solicitação atualizada com sucesso!");
+    } else {
+      // Otherwise, it's a new request.
+      const newRequest = { ...data, id: Date.now() };
+      setRequests(prev => [...prev, newRequest]);
+      alert("Formulário enviado com sucesso!");
+    }
+    setEditingRequest(null);
+
+    // If common user, go back to a new form.
+    if (currentUser?.role === UserRole.COMMON) {
+      setView('form');
+    } else { // Admin behavior
+      // Navigate to the correct list view
+      if (data.isResolved === 'Sim') {
+        setView('resolvido');
+      } else if (data.isResolved === 'Não') {
+        setView('nao_resolvido');
+      } else {
+        setView('aberto');
+      }
+    }
+  };
+
+  const handleStartEdit = (request) => {
+    setEditingRequest(request);
+    setView('form');
+  };
+
+  const handleCancelEdit = () => {
+    const originalRequest = requests.find(r => r.id === editingRequest?.id);
+    let lastView = 'aberto';
+    if(originalRequest) {
+        lastView = originalRequest.isResolved === 'Sim' ? 'resolvido' :
+                   originalRequest.isResolved === 'Não' ? 'nao_resolvido' : 'aberto';
+    }
+    
+    setEditingRequest(null);
+    setView(lastView);
+  };
+  
+  const handleDeleteRequest = (id) => {
+    setRequests(prev => prev.filter(r => r.id !== id));
+    alert("Solicitação excluída com sucesso!");
+  };
+
+  const filteredRequests = useMemo(() => {
+    switch (view) {
+      case 'aberto':
+        return requests.filter(r => r.isResolved === null);
+      case 'resolvido':
+        return requests.filter(r => r.isResolved === 'Sim');
+      case 'nao_resolvido':
+        return requests.filter(r => r.isResolved === 'Não');
+      default:
+        return [];
+    }
+  }, [requests, view]);
+  
+  const viewTitles = {
+      form: editingRequest ? 'Editar Solicitação de Suporte' : 'Nova Solicitação de Suporte',
+      aberto: 'Solicitações em Aberto',
+      resolvido: 'Solicitações Resolvidas',
+      nao_resolvido: 'Solicitações Não Resolvidas',
+      admin: 'Administração de Usuários',
+  };
+
+  const renderMainContent = () => {
+    if (!currentUser) return null;
+
+    if (view === 'admin') {
+      if (currentUser.role !== UserRole.ADMIN) return <p className="text-center text-red-500">Acesso negado.</p>;
+      return <AdminPanel users={users} onAddUser={handleAddUser} onDeleteUser={handleDeleteUser} />;
+    }
+    
+    if (view === 'form') {
+      return (
+        <RequestForm 
+          onSave={handleSaveRequest} 
+          initialData={editingRequest}
+          onCancel={handleCancelEdit}
+        />
+      );
+    }
+    
+    // List views are only for admin
+    if (currentUser.role === UserRole.ADMIN) {
+      return (
+        <RequestList 
+          requests={filteredRequests} 
+          title={viewTitles[view]}
+          onEdit={handleStartEdit}
+          onDelete={handleDeleteRequest}
+        />
+      );
+    }
+
+    // Fallback for common user trying to access a restricted view
+    return (
+        <div className="text-center p-8 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold">Acesso Restrito</h2>
+            <p className="text-gray-600 mt-2">Seu perfil de usuário não tem permissão para visualizar esta página. Por favor, crie uma nova solicitação.</p>
+        </div>
+    );
+  };
+
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
+      <Header 
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+      <div className="flex flex-grow container mx-auto p-4 sm:p-6 lg:p-8 space-x-8">
+        <SidePanel 
+            requests={requests} 
+            setView={setView} 
+            currentView={view} 
+            currentUser={currentUser}
+        />
+        <main className="flex-grow">
+          {renderMainContent()}
+        </main>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+
+// ========= From: index.tsx =========
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+    </script>
+  </body>
+</html>

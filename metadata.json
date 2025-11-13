@@ -1,0 +1,5 @@
+{
+  "name": "Sistema de SUPORTE TÉCNICO - ENGENHARIA",
+  "description": "Um aplicativo para registrar solicitações de suporte técnico para equipamentos de engenharia como elevadores e escadas rolantes, incluindo descrições de problemas, soluções e fotos.",
+  "requestFramePermissions": []
+}
